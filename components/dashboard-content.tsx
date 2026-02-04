@@ -2,9 +2,9 @@
 
 import React from "react";
 import { DashboardSidebar } from "@/components/sidebar";
-import { WhatsAppChat } from "@/components/whatsapp-chat";
+import WhatsAppChat from "@/components/whatsapp-chat";
 import { RiskScoreCard } from "@/components/risk-score-card";
-import { MitigationWizard } from "@/components/mitigation-wizard";
+import MitigationWizard from "@/components/mitigation-wizard";
 import { RiskDashboardData } from "@/lib/services/risk.service";
 
 interface DashboardContentProps {

@@ -1,24 +1,25 @@
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
 
-export default [
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  basePath: __dirname,
+});
+
+const eslintConfig = [
+  // Extiende las reglas recomendadas de Next.js y TypeScript
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "off", // Útil para la fase de desarrollo
-      "react/react-in-jsx-scope": "off", // React 19 no lo necesita
-    },
-    languageOptions: {
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-      },
-    },
-  },
-  {
-    // Ignorar carpetas de build para que no den errores falsos
-    ignores: [".next/*", "node_modules/*", "dist/*"],
-  },
+      // Configuraciones sugeridas para el desarrollo inicial
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "react/no-unescaped-entities": "off"
+    }
+  }
 ];
+
+export default eslintConfig;

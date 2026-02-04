@@ -1,101 +1,37 @@
-import { RiskSeverity } from "@/lib/domain/risk";
+// lib/ui/risk-ui.mapper.ts
+import { RiskSnapshot, RiskEvaluation, RiskLevel } from '@/lib/domain/risk';
 
-/**
- * ------------------------------------------------------------------
- * NIVELES DE RIESGO (UI / NEGOCIO)
- * No forman parte del dominio técnico.
- * ------------------------------------------------------------------
- */
-export type RiskLevelUI =
-  | "critico"
-  | "alto"
-  | "moderado"
-  | "bajo"
-  | "estable";
+export const RiskUiMapper = {
+  // Convierte el Nivel de Riesgo (DB) a Color (Hex)
+  getLevelColor(level: string): string {
+    switch (level?.toLowerCase()) {
+      case 'critical': return '#EF4444'; // Red-500
+      case 'high':     return '#F97316'; // Orange-500
+      case 'medium':   return '#F59E0B'; // Amber-500
+      case 'low':      return '#10B981'; // Emerald-500
+      default:         return '#94A3B8'; // Slate-400
+    }
+  },
 
-export const RISK_LEVEL_UI: Record<
-  RiskLevelUI,
-  {
-    label: string;
-    badge: string;
-    icon: string;
-    description: string;
+  // Obtiene el texto de impacto formateado (ej: "$18,500 USD")
+  getImpactText(snapshot: RiskSnapshot): string {
+    const context = snapshot.financial_context || {};
+    // Busca varios posibles nombres de campo para el costo
+    const amount = context.estimated_cost ?? context.loss_projection ?? 0;
+    
+    if (amount === 0) return "Sin impacto financiero estimado";
+    
+    return `$${amount.toLocaleString('en-US')} USD PROJECTED RISK`;
+  },
+
+  // Transforma el Snapshot de DB a la Evaluación para el componente Gauge
+  toEvaluation(snapshot: RiskSnapshot): RiskEvaluation {
+    return {
+      score: snapshot.global_score,
+      level: snapshot.risk_level as RiskLevel,
+      summary: snapshot.scenario_description || "Sin descripción disponible",
+      recommendations: snapshot.recommendation_text ? [snapshot.recommendation_text] : [],
+      color: this.getLevelColor(snapshot.risk_level),
+    };
   }
-> = {
-  critico: {
-    label: "Crítico",
-    badge: "bg-red-100 text-red-700 border-red-200",
-    icon: "AlertOctagon",
-    description: "Acción inmediata requerida",
-  },
-  alto: {
-    label: "Alto",
-    badge: "bg-orange-100 text-orange-700 border-orange-200",
-    icon: "AlertTriangle",
-    description: "Atención prioritaria",
-  },
-  moderado: {
-    label: "Moderado",
-    badge: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    icon: "Info",
-    description: "Monitoreo activo",
-  },
-  bajo: {
-    label: "Bajo",
-    badge: "bg-blue-100 text-blue-700 border-blue-200",
-    icon: "ShieldCheck",
-    description: "Situación controlada",
-  },
-  estable: {
-    label: "Estable",
-    badge: "bg-green-100 text-green-700 border-green-200",
-    icon: "CheckCircle",
-    description: "Sin riesgos detectados",
-  },
 };
-
-/**
- * ------------------------------------------------------------------
- * SEVERIDADES TÉCNICAS (DOMINIO)
- * ------------------------------------------------------------------
- */
-export const SEVERITY_UI: Record<
-  RiskSeverity,
-  {
-    label: string;
-    color: string;
-    dot: string;
-  }
-> = {
-  critical: {
-    label: "Severidad Crítica",
-    color: "text-red-600",
-    dot: "bg-red-600",
-  },
-  high: {
-    label: "Severidad Alta",
-    color: "text-orange-500",
-    dot: "bg-orange-500",
-  },
-  medium: {
-    label: "Severidad Media",
-    color: "text-yellow-500",
-    dot: "bg-yellow-500",
-  },
-  low: {
-    label: "Severidad Baja",
-    color: "text-blue-500",
-    dot: "bg-blue-500",
-  },
-};
-
-/**
- * ------------------------------------------------------------------
- * MAPPERS
- * ------------------------------------------------------------------
- */
-export const getRiskLevelUI = (level: RiskLevelUI) =>
-  RISK_LEVEL_UI[level] ?? RISK_LEVEL_UI.estable;
-
-export const getSeverityUI = (severity: RiskSeverity) =>
-  SEVERITY_UI[severity];

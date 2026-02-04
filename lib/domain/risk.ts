@@ -1,110 +1,45 @@
-/**
- * Fuente de la Verdad del dominio de Riesgo.
- * Auto-generado a partir de smartdash_schema.sql
- */
+// lib/domain/risk.ts
 
-// -------------------------------------------------------------------
-// SEGMENTOS (RUBROS)
-// -------------------------------------------------------------------
+export type RiskLevel = 'critical' | 'high' | 'medium' | 'low' | 'stable';
 
-export const RUBROS_FV = [
-  "Pyme",
-  "Creator",
-  "MercadoLibre Seller",
-  "E-commerce",
-  "Enterprise",
-  "Freelancer",
-] as const;
-
-export type Segment = (typeof RUBROS_FV)[number];
-
-export const ALL_SEGMENTS = "Todos los rubros" as const;
-export type AllSegments = typeof ALL_SEGMENTS;
-export type SegmentFilter = Segment | AllSegments;
-
-export function isValidSegment(value: unknown): value is Segment {
-  return RUBROS_FV.includes(value as Segment);
-}
-
-// -------------------------------------------------------------------
-// RIESGO
-// -------------------------------------------------------------------
-
-export type RiskLevel =
-  | "critico"
-  | "alto"
-  | "moderado"
-  | "bajo"
-  | "estable";
-
-/**
- * Severidades técnicas (usadas en RiskEngine y UI)
- * Valores: critical, high, medium, low
- */
-export type RiskSeverity = "critical" | "high" | "medium" | "low";
-
+// Estructura exacta de los JSONB en tu DB
 export interface RiskSignal {
-  code: string;
-  label: string;
-  value: number;
-  unit: string;
-  severity: RiskSeverity;
-  impact_description: string;
-  context: string;
+  id?: string;
+  type: string;
+  code?: string;
+  value?: number | string;
+  weight?: number;
+  detected_at?: string;
+  description?: string; // Para mostrar en UI
 }
 
+export interface FinancialContext {
+  estimated_cost?: number;
+  loss_projection?: number;
+  currency?: string;
+  [key: string]: any; // Flexibilidad para otros datos
+}
+
+// Entidad que representa la fila de DB
+export interface RiskSnapshot {
+  id: string;
+  client_id: string | null;
+  global_score: number; // Ya convertido a número
+  risk_level: RiskLevel | string;
+  scenario_description: string | null;
+  recommendation_text: string | null;
+  recommendation_type: string | null;
+  signals: RiskSignal[];
+  financial_context: FinancialContext;
+  action_status: 'pending' | 'in_progress' | 'completed' | 'dismissed' | null;
+  created_at: string; // ISO String
+}
+
+// Para el UI (Gauge y Tarjetas)
 export interface RiskEvaluation {
-  score: number; // 0–100
+  score: number;
   level: RiskLevel;
   summary: string;
   recommendations: string[];
   color: string;
-}
-
-// -------------------------------------------------------------------
-// PLAN DE ACCIÓN (IA)
-// -------------------------------------------------------------------
-
-export interface AIActionPlan {
-  rationale: string;
-  immediate_steps: string[];
-  expected_impact: string;
-  risk_reduction_estimate: number;
-  suggested_message: string;
-}
-
-// -------------------------------------------------------------------
-// SNAPSHOT DE RIESGO (DB)
-// -------------------------------------------------------------------
-
-export interface RiskSnapshot {
-  id: string;
-  client_id: string;
-  scenario_id: string;
-  scenario_description: string;
-  vertical:
-    | "Fiscal"
-    | "Legal"
-    | "RRHH"
-    | "Reputación"
-    | "Supply Chain"
-    | "Operaciones"
-    | "Financiero";
-  global_score: number;
-  risk_level: RiskLevel;
-  financial_context: {
-    estimated_cost?: number;
-    productivity_loss?: number;
-    replacement_risk?: number;
-    currency?: string;
-    [key: string]: number | string | undefined;
-  };
-  signals: RiskSignal[];
-  recommendation_type?: "preventive" | "corrective" | "monitor";
-  recommendation_text: string;
-  action_deadline?: string;
-  action_status?: "pending" | "in_progress" | "completed" | "dismissed";
-  score_version?: string;
-  created_at: string;
-  updated_at: string;
 }

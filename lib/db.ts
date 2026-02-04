@@ -1,25 +1,30 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from 'postgres';
 
-// Initialize Neon SQL client with connection string
-// DATABASE_URL must be set in Vercel environment variables
-const connectionString = process.env.DATABASE_URL;
+// 1. Leemos la URL de conexión de tu .env.local
+const connectionString = process.env.NEON_DB_URL;
 
-// Export SQL client - will throw error if DATABASE_URL is not set
-export const sql = connectionString ? neon(connectionString) : null;
-
-// Helper to check if database is connected
-export function isDatabaseConnected(): boolean {
-  return sql !== null;
+if (!connectionString) {
+  console.error("❌ ERROR: No se encontró NEON_DB_URL en las variables de entorno.");
 }
 
-// Log connection status on server startup
-if (typeof window === "undefined") {
-  if (isDatabaseConnected()) {
-    console.log("[SmartDash] Database connection configured successfully");
-  } else {
-    console.log("[SmartDash] DATABASE_URL not configured - using mock data");
-    console.log(
-      "[SmartDash] Add your Neon connection string in Vercel Dashboard > Settings > Environment Variables",
-    );
+// 2. Configuramos el cliente de Postgres (postgres.js)
+// "ssl: 'require'" es obligatorio para Neon
+const sql = postgres(connectionString!, {
+  ssl: 'require',
+  max: 10,               // Máximo de conexiones en el pool
+  idle_timeout: 20,      // Cierra conexiones inactivas tras 20s
+  connect_timeout: 10,   // Tiempo de espera para conectar
+});
+
+// 3. Función auxiliar para verificar conexión rápidamente
+export async function isDatabaseConnected() {
+  try {
+    await sql`SELECT 1`;
+    return true;
+  } catch (e) {
+    console.error("⚠️ Error de conexión a Neon:", e);
+    return false;
   }
 }
+
+export { sql };

@@ -1,75 +1,123 @@
 "use client";
 
-import React from "react";
-import { RiskEvaluation } from "@/lib/domain/risk";
-import { RadialGauge } from "@/components/radial-gauge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface RiskScoreCardProps {
-  evaluation: RiskEvaluation;
-  metrics?: Record<string, unknown>;
+  score: number;
+  impact: string;
+  evaluation: string;
 }
 
-export function RiskScoreCard({ evaluation }: RiskScoreCardProps) {
-  const { score, level } = evaluation;
+export function RiskScoreCard({ score, impact, evaluation }: RiskScoreCardProps) {
+  // 1. Configuración de Colores
+  const getGradientColors = (s: number) => {
+    if (s >= 80) return { start: "#FCA5A5", end: "#DC2626", badgeBg: "bg-red-50", badgeText: "text-red-600", label: "Crítico" }; 
+    if (s >= 60) return { start: "#FDBA74", end: "#EA580C", badgeBg: "bg-orange-50", badgeText: "text-orange-600", label: "Alto" }; 
+    if (s >= 40) return { start: "#FDE047", end: "#CA8A04", badgeBg: "bg-yellow-50", badgeText: "text-yellow-700", label: "Medio" }; 
+    return { start: "#86EFAC", end: "#16A34A", badgeBg: "bg-green-50", badgeText: "text-green-700", label: "Bajo" }; 
+  };
 
-  // Mapeo visual corporativo
-  const isCritical = score >= 80;
-  const statusColor = isCritical ? "text-red-600" : score >= 50 ? "text-orange-500" : "text-emerald-600";
-  const barColor = isCritical ? "bg-red-600" : score >= 50 ? "bg-orange-500" : "bg-emerald-600";
+  const config = getGradientColors(score);
+
+  // 2. Cálculos Geométricos para el SVG (Gauge)
+  const radius = 85;
+  const strokeWidth = 12;
+  const center = 100; // SVG Viewbox 200x110
+  const circumference = Math.PI * radius; 
+  const progressOffset = circumference - (score / 100) * circumference;
+
+  const angle = 180 - (score / 100) * 180;
+  const angleRad = (angle * Math.PI) / 180;
+  const needleX = center + radius * Math.cos(angleRad);
+  const needleY = center - radius * Math.sin(angleRad);
 
   return (
-    // Panel estilo "Papel Corporativo" o "Tarjeta High-End"
-    <div className="w-full bg-[#f8fafc] dark:bg-[#1e293b] rounded-2xl p-6 shadow-xl border border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-      
-      {/* Decoración de fondo sutil (circuitería o grid) */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] pointer-events-none" />
-
-      {/* COLUMNA 1: GAUGE (El Velocímetro) */}
-      <div className="shrink-0 relative z-10">
-        <RadialGauge value={score} size={140} strokeWidth={12} label="SCORE" />
-      </div>
-
-      {/* COLUMNA 2: INFO TEXTUAL MASIVA */}
-      <div className="flex-1 w-full relative z-10 flex flex-col justify-center">
+    <Card className="relative overflow-hidden border-none shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] bg-white rounded-[32px] p-8 transition-all hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)]">
+      <div className="flex flex-col md:flex-row items-center gap-10">
         
-        {/* Título Principal */}
-        <div className="flex flex-col md:flex-row md:items-baseline gap-2 mb-4 text-center md:text-left">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-700 dark:text-slate-200 tracking-tight">
-            ÍNDICE DE RIESGO GLOBAL:
-          </h2>
-          <span className={`text-4xl md:text-5xl font-black ${statusColor} drop-shadow-sm`}>
-            {score.toFixed(1)} ({level?.toUpperCase()})
-          </span>
+        {/* --- GAUGE VISUAL --- */}
+        <div className="relative w-64 h-32 flex-shrink-0">
+          <svg viewBox="0 0 200 110" className="w-full h-full overflow-visible">
+            <defs>
+              <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={config.start} />
+                <stop offset="100%" stopColor={config.end} />
+              </linearGradient>
+              <filter id="needleShadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.15)" />
+              </filter>
+            </defs>
+
+            {/* Carril de Fondo */}
+            <path
+              d={`M ${center - radius} ${center} A ${radius} ${radius} 0 0 1 ${center + radius} ${center}`}
+              fill="none"
+              stroke="#F3F4F6"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+            />
+
+            {/* Arco de Progreso */}
+            <path
+              d={`M ${center - radius} ${center} A ${radius} ${radius} 0 0 1 ${center + radius} ${center}`}
+              fill="none"
+              stroke="url(#gaugeGradient)"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={progressOffset}
+              className="transition-all duration-1000 ease-out"
+            />
+
+            {/* Aguja (Círculo) */}
+            <circle
+              cx={needleX}
+              cy={needleY}
+              r="8"
+              fill="white"
+              stroke={config.end}
+              strokeWidth="3"
+              filter="url(#needleShadow)"
+              className="transition-all duration-1000 ease-out"
+            />
+          </svg>
+
+          {/* Texto Central */}
+          <div className="absolute inset-0 top-6 flex flex-col items-center justify-end text-center">
+            <span className="text-5xl font-bold tracking-tighter text-gray-900 font-sans">
+              {score.toFixed(1)}
+            </span>
+            <span className="text-sm font-medium text-gray-400 mt-1 uppercase tracking-widest text-[10px]">
+              Índice Riesgo
+            </span>
+          </div>
         </div>
 
-        {/* Barra de Salud Organizacional */}
-        <div className="w-full space-y-2">
-           <div className="flex justify-between items-center px-1">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Salud Organizacional
-              </span>
-              <span className={`text-xs font-bold uppercase ${statusColor}`}>
-                {level}
-              </span>
-           </div>
-           
-           {/* Progress Bar Container */}
-           <div className="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shadow-inner relative">
-              {/* Progress Bar Fill */}
-              <div 
-                className={`h-full ${barColor} transition-all duration-1000 ease-out relative`}
-                style={{ width: `${score}%` }}
-              >
-                  {/* Efecto de brillo en la barra */}
-                  <div className="absolute top-0 right-0 bottom-0 w-full bg-gradient-to-r from-transparent to-white/30" />
-              </div>
-           </div>
-           
-           <p className="text-right text-[10px] text-slate-400 italic mt-1">
-             Actualizado en tiempo real • Fuente: SmartDash Engine
-           </p>
+        {/* --- DATOS Y TEXTO --- */}
+        <div className="flex-1 space-y-5 text-center md:text-left w-full">
+          <div className="flex items-center justify-center md:justify-start gap-3">
+             <Badge className={cn("px-4 py-1.5 rounded-full font-semibold border-0 text-sm", config.badgeBg, config.badgeText)}>
+               ● {config.label}
+             </Badge>
+             <span className="text-xs font-medium text-gray-400">Actualizado ahora</span>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Impacto Financiero Proyectado</h3>
+            <div className="text-3xl font-bold text-gray-900 tracking-tight">
+              {impact}
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100/50 text-gray-600 text-sm leading-relaxed">
+            {/* ETIQUETA ACTUALIZADA */}
+            <span className="font-semibold text-gray-900">Detección de Desvío: </span> 
+            {evaluation}
+          </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
