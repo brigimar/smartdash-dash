@@ -1,20 +1,53 @@
 // components/mitigation-wizard.tsx
-export function MitigationWizard({ steps }: { steps: any[] }) {
+"use client";
+
+import React from "react";
+import { cn } from "@/lib/utils";
+
+interface MitigationStep {
+  step_number: number;
+  title: string;
+  description: string;
+}
+
+export function MitigationWizard({ steps }: { steps: MitigationStep[] }) {
   if (!steps || steps.length === 0) {
-    return <p className="text-sm text-gray-400 italic">No hay acciones de mitigación registradas.</p>;
+    return (
+      <p className="text-sm text-muted-foreground italic">
+        No hay acciones de mitigación registradas.
+      </p>
+    );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {steps.map((step, index) => (
-        <div key={index} className="p-5 bg-white border rounded-2xl shadow-sm hover:border-orange-200 transition-colors">
+      {steps.map((step) => (
+        <div
+          key={step.step_number}
+          className={cn(
+            "p-5 rounded-2xl border border-border bg-card shadow-sm",
+            "transition-colors hover:bg-accent/30"
+          )}
+        >
           <div className="flex items-start gap-4">
-            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold shrink-0">
-              {step.step_number} {/* BIEN: Acceso a propiedad primitiva */}
+            {/* Step number */}
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                "bg-primary/10 text-primary font-bold text-sm"
+              )}
+            >
+              {step.step_number}
             </div>
+
+            {/* Content */}
             <div>
-              <h4 className="font-bold text-gray-900">{step.title}</h4> {/* BIEN */}
-              <p className="text-sm text-gray-500 mt-1 leading-relaxed">{step.description}</p> {/* BIEN */}
+              <h4 className="font-bold text-foreground">
+                {step.title}
+              </h4>
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                {step.description}
+              </p>
             </div>
           </div>
         </div>
