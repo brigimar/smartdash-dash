@@ -8,12 +8,13 @@ interface PageProps {
 export default async function DemoPage({ searchParams }: PageProps) {
   const segmento = searchParams.segmento;
 
-  // /demo → Pantalla 1A
+  // 🔒 REGLA ABSOLUTA:
+  // Sin segmento → SOLO Pantalla 1A (segmentos)
   if (!segmento) {
     return <WelcomeScreen />;
   }
 
-  // /demo?segmento=Startup → Pantalla 1B
+  // Con segmento → Pantalla 1B (casos testigo)
   const casos = await getCasosTestigoBySegmento(segmento);
 
   return (
@@ -24,6 +25,5 @@ export default async function DemoPage({ searchParams }: PageProps) {
     />
   );
 }
-
 
 
