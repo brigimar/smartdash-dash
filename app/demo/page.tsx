@@ -25,5 +25,3 @@ export default async function DemoPage({ searchParams }: PageProps) {
     />
   );
 }
-
-
