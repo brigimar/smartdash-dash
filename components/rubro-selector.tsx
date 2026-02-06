@@ -74,7 +74,7 @@ export function RubroSelector() {
           return (
             <Link
               key={rubro.id}
-              href={`/?rubro=${rubro.id}`}
+              href={`/demo?segmento=${RUBRO_TO_SEGMENT[rubro.id]}`}
               className="group block"
             >
               <Card className={cn(
