@@ -1,21 +1,20 @@
-import { WelcomeScreen } from "@/components/welcome-screen";
+import WelcomeScreen from "@/components/welcome-screen";
 
 export const dynamic = "force-dynamic";
 
-interface PageProps {
-  searchParams?: {
-    segmento?: string;
-  };
+interface DemoPageProps {
+  searchParams: { segmento?: string };
 }
 
-export default function DemoPage({ searchParams }: PageProps) {
-  const segmento = searchParams?.segmento;
+export default function DemoPage({ searchParams }: DemoPageProps) {
+  const segmento = searchParams.segmento;
 
   return (
     <WelcomeScreen
-      initialMode={segmento ? "casos" : "clientes"}
+      initialMode="casos"
       segmento={segmento}
     />
   );
 }
+
 
